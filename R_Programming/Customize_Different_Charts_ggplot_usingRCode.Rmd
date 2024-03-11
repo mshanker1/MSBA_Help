@@ -1,0 +1,212 @@
+---
+title: "ggplot"
+author: "Chaitanya"
+date: "2024-03-08"
+output: html_document
+---
+
+1. To check inbuilt datasets in R, we use
+
+```{r}
+
+data() 
+
+```
+
+2. Out of all the datasets, we choose BOD dataset. What exactly it means
+```{r}
+?BOD
+
+head(BOD)
+```
+
+3. Plot a simple line graph using ggplot
+```{r}
+#install.packages("ggplot2")
+library(ggplot2)
+
+ggplot(data = BOD,
+       mapping = aes(x = Time,
+                     y = demand))
+
+
+ggplot(data = BOD,
+       mapping = aes(x = Time,
+                     y = demand))+
+  geom_point(colour="green", size=3)+
+  geom_line()
+
+
+
+ggplot(BOD, aes(Time, demand))+
+  geom_point(size=3)+
+  geom_line(colour="red")
+```
+
+4. Plot 2 or more variables using ggplot
+```{r}
+
+CO2
+
+```
+```{r}
+library(tidyverse)
+
+
+CO2 %>% 
+  ggplot(aes(conc, uptake,
+             colour = Treatment))+
+  geom_point(size=3, alpha=0.5)+                
+  geom_smooth(method = lm, se = F)+             
+  facet_wrap(~Type)+
+  labs(title = "Concentration of CO2")+
+  theme_bw()
+
+
+```
+
+5. Plot a box plot using CO2 data
+
+```{r}
+
+CO2 %>%
+  ggplot(aes(Treatment, uptake))+
+  geom_boxplot()+
+  geom_point(alpha = 0.5,
+             aes(size = conc,
+                 colour = Plant))+
+  coord_flip()+
+  theme_bw()+
+  facet_wrap(~Type)+
+  labs(title = "Chilled vs Non-Chilled")
+
+```
+
+6. Plot mpg data using ggplot
+
+```{r}
+
+head(mpg)
+
+```
+
+```{r}
+mpg %>%
+  ggplot(aes(displ, cty))+
+  geom_point(aes(colour=drv, size = trans),
+             alpha=0.5)+
+  geom_smooth(method=lm)+
+  facet_wrap(~year)+
+  labs(x="Engine Size",
+       y="mpg in the city",
+       title="Fuel Efficiency")+
+  theme_bw()
+  
+```
+
+
+7. Scatterplot
+
+```{r}
+
+mpg %>% 
+  filter(hwy<35) %>%
+  ggplot(aes(x=displ,
+             y=hwy))+
+  geom_point(aes(colour = drv))+
+  geom_smooth(method = lm,
+              se = F)+
+  labs(x="Engine Size",
+       y="MPG on the Highway",
+       title="Fuel Efficiency")+
+  theme_minimal()
+
+```
+
+8. Barcharts
+
+```{r}
+
+head(msleep)
+
+```
+
+Single Categorical
+
+```{r}
+
+msleep %>%
+  drop_na(vore) %>%
+  ggplot(aes(fct_infreq(vore)))+
+  geom_bar(fill = "#B27A6E")+
+  #coord_flip()+
+  theme_bw()+
+  labs(x = "vore",
+       y = NULL,
+       title = "Number of observations per order")
+
+```
+
+Single Numeric
+
+```{r}
+
+msleep %>%
+  ggplot(aes(awake))+
+  geom_histogram(binwidth = 1, fill="#6EB27A")+
+  #coord_flip()+
+  theme_bw()+
+  labs(x = "Total Sleep",
+       y = NULL,
+       title = "Number of observations per order")
+
+```
+
+Line Chart
+
+```{r}
+
+View(Orange)
+
+
+```
+
+```{r}
+
+Orange %>%
+  filter(Tree!="2") %>%
+  ggplot(aes(age, circumference))+
+  geom_point()+
+  geom_smooth()+
+  facet_wrap(~Tree)+
+  theme_bw()+
+  labs(title = "Tree age and Circumference")
+
+
+```
+```{r}
+Orange %>%
+  filter(Tree!="1" & Tree!="2") %>%
+  ggplot(aes(age, circumference, colour = Tree))+
+  geom_point(size = 5, alpha = 0.3)+
+  geom_line(size=1)+
+  theme_minimal()+
+  labs(title = "Tree age and Circumference")
+
+
+```
+
+
+Box plot
+
+```{r}
+
+msleep %>%
+  drop_na (vore) %>%
+  ggplot(aes(vore, sleep_total))+
+  geom_boxplot()+
+  coord_flip()+
+  theme_bw()
+
+```
+
