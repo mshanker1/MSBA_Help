@@ -1,0 +1,206 @@
+---
+title: "Exploratory Data Analysis on Bike Buyers"
+author: "Chaitanya"
+date: "2024-02-16"
+output: html_document
+---
+
+
+
+
+Import the data from csv file and read the data
+
+```{r}
+setwd("C:\\Users\\urooj\\OneDrive\\Desktop\\Masters\\Spring\\R Sessions")
+bikebuyers=read.csv("bike_buyers.csv")
+head(bikebuyers)
+```
+
+Get high level overview of data
+
+```{r}
+
+str(bikebuyers)
+```
+
+Apply Descriptive Statistics on the data
+
+```{r}
+summary(bikebuyers)
+```
+If we observe, the categorical columns like "Marital.Status", "Gender", "Education", "Occupation", "Home.Owner", "Commute.Distance", "Region", "Purchased.Bike" aren't displaying any information as they are in character datatype.
+
+Inorder to make them in a readable format, "as.factor" helps converts variable into a factor.
+
+  + Factorization:
+
+    + Converts the variable into a factor data type, which stores unique categories and assigns integer codes to them.
+    + Preserves the original order of categories and their relationships.
+    + More memory-efficient for variables with many categories.
+
+```{r}
+bikebuyers$Marital.Status <- as.factor(bikebuyers$Marital.Status)
+bikebuyers$Gender <- as.factor(bikebuyers$Gender)
+bikebuyers$Education <- as.factor(bikebuyers$Education)
+bikebuyers$Occupation <- as.factor(bikebuyers$Occupation)
+bikebuyers$Home.Owner <- as.factor(bikebuyers$Home.Owner)
+bikebuyers$Commute.Distance <- as.factor(bikebuyers$Commute.Distance)
+bikebuyers$Region <- as.factor(bikebuyers$Region)
+bikebuyers$Purchased.Bike <- as.factor(bikebuyers$Purchased.Bike)
+```
+
+Now, by changing all the variables into factors, we can view summary of those columns which can be helpful to explore the data.
+
+```{r}
+summary(bikebuyers)
+```
+
+
+```{r}
+class(bikebuyers)
+```
+
+```{r}
+View(bikebuyers)
+```
+
+Do you need to adjust anything at this point?data types, structure of the data
+
+*Why we use "dplyr"?*
+The dplyr package offers several advantages for data manipulation in R.
+
+```{r}
+library("dplyr")
+bikebuyers <- select(bikebuyers,-ID)
+summary(bikebuyers)
+```
+
+### Examine Univariate data
+
+Univariate data means examining the samples of one variable.
+
+  + It doesn't concerned with "why". It just describe the data.
+  
+
+### Discrete variables vs Continuous variables
+
+ + *Discrete* - It has set of limited values, an example is level of education in the data set.
+ 
+ + *Continuous* - It can be just any number.
+ 
+ 
+### Two things to discover in EDA are
+
+  + Central tendency - What is the common value? What's the value around which the data is centered?
+  
+  + Spread - how varied are the data points?
+  
+*Types of charts we use*
+
+  + Box plot
+  
+  + Histogram
+  
+  + Density Plot
+  
+  + Pie Charts
+
+
+
+*Measure of Central tendency for "Income" - continuous data*
+
+```{r}
+summary(bikebuyers$Income)
+boxplot(bikebuyers$Income)
+```
+
+The above box plot indicates the data is Right Skewed with 3 outliers. The Mean and Median aren't same.
+
+The spread of the data can be seen in the histogram.
+
+
+```{r}
+hist(bikebuyers$Income)
+```
+
+
+We use Density plot to see how frequently I can see the data points.
+
+
+```{r}
+plot(density(bikebuyers$Income),main="income density spread")
+
+#?density
+
+```
+
+Exploring categorical variable "Education"
+
+```{r}
+
+summary(bikebuyers$Education)
+plot(bikebuyers$Education)
+
+```
+
+
+Exploring categorical variable "Marital.Status"
+
+```{r}
+
+summary(bikebuyers$Marital.Status)
+plot(bikebuyers$Marital.Status)
+pie(table(bikebuyers$Marital.Status), main = "Married vs Single Bike Buyers")
+
+```
+
+Exploring "Children"
+
+```{r}
+summary(bikebuyers$Children)
+plot(bikebuyers$Children)
+
+```
+The above scatter plot is difficult to intrepret.
+
+Ask yourself if this is a right data type to intrepret.
+
+Change to factor
+```{r}
+bikebuyers$Children=factor(bikebuyers$Children)
+summary(bikebuyers$Children)
+```
+
+```{r}
+plot(bikebuyers$Children,xlab="No. of Children",ylab="frequency")
+```
+
+After we change the data type we can read the data clearly.
+
+
+What about those who bought a bike specifically
+```{r}
+library("dplyr")
+bought=filter(bikebuyers, Purchased.Bike== "Yes")
+plot(bought$Children)
+```
+Mini Challenge:
+1. What is the most common commute distance? Visualize it?
+2. Did more people buy bikes or not? Visualize it?
+
+
+
+
+
+
+```{r}
+summary(bikebuyers$Commute.Distance)
+plot(bikebuyers$Commute.Distance)
+```
+
+```{r}
+summary(bikebuyers$Purchased.Bike)
+plot(bikebuyers$Purchased.Bike)
+```
+
+
