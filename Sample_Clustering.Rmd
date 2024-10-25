@@ -1,0 +1,161 @@
+---
+title: "6-Clustering"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+  html_notebook:
+    highlight: textmate
+    theme: cerulean
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+dir.create("images")
+```
+
+***
+
+# K-Means Example: Vehicle Sales
+
+We illustrate the use of k-means through the "Cars" example. First, install the required packages
+```{r}
+library(tidyverse)  # data manipulation
+# install.packages("factoextra") # if necessary
+library(factoextra) # clustering algorithms & visualization
+library(e1071) 
+library(readr)
+library(ISLR)
+library(caret)
+```
+## Import, Clean, Partition, and Normalize the Data
+
+```{r}
+# Read input data
+Vehicles_Sales <- read_csv("~/Downloads/Vehicles_Sales.csv")
+head(Vehicles_Sales)
+```
+
+Let's clean up the data
+```{r}
+# Drop Year_ID and Productline
+Vehicles_Sales <- Vehicles_Sales[,-c(9,10)]
+
+# Convert Dealsize to factor
+Vehicles_Sales$DEALSIZE <- as.factor(Vehicles_Sales$DEALSIZE)
+
+# Now convert to dummy variables
+groups = dummyVars(~.,data=Vehicles_Sales)
+Vehicles_Sales <- as.data.frame(predict(groups,Vehicles_Sales))
+
+```
+
+Now, let's partition the data
+
+```{r}
+library(dplyr)
+set.seed(15)
+
+# Create training set
+Training_index = createDataPartition(Vehicles_Sales$STATUS,p=0.5,list=FALSE)
+train.df <- Vehicles_Sales[Training_index,]
+ValTest_data <- Vehicles_Sales[-Training_index,]
+
+# Create Validation and Test Sets
+
+Validation_index = createDataPartition(ValTest_data$STATUS,p=0.6,list=FALSE)
+valid.df <- ValTest_data[Validation_index,]
+test.df <- ValTest_data[-Validation_index,]
+
+summary(train.df)
+summary(valid.df)
+summary(test.df)
+```
+Now, normalize the data. Remember to only use the training data to do the normalization, and only continuous variables
+```{r}
+
+# Copy the original data
+train.norm.df <- train.df
+valid.norm.df <- valid.df
+test.norm.df <- test.df
+
+# use preProcess() from the caret package to normalize Sales and Age.
+norm.values <- preProcess(train.df[, c(1:5,9)], method=c("center", "scale"))
+
+train.norm.df[, c(1:5,9)] <- predict(norm.values, train.df[, c(1:5,9)]) 
+valid.norm.df[, c(1:5,9)] <- predict(norm.values, valid.df[, c(1:5,9)])
+test.norm.df[, c(1:5,9)] <- predict(norm.values, test.df[, c(1:5,9)])
+
+```
+
+
+## Modeling k-NN
+
+Let us now apply knn. knn() is available in library FNN (provides a list of the nearest neighbors), and library class (allows a numerical output variable).
+
+```{r}
+#install.packages("FNN") # install if needed
+library(FNN)
+nn <- knn(train = train.norm.df[,-6], test = test.norm.df[,-6], 
+          cl = train.norm.df[,6], k = 1, prob=TRUE) # We use k = 1, and Status is the Y
+
+#attr(nn,"nn.index")
+# print(nn) # uncomment for more output
+
+#row.names(train.df)[attr(nn, "nn.index")]
+```
+
+Note the output provides Status, and also a measure of distances from its nearest neighbors, in this case k=1.
+
+But, how does one choose k?
+
+***
+
+## Hypertuning using Validation
+
+To determine k, we use the performance on the validation set.
+Here, we will vary the value of k from 1 to 14
+
+```{r}
+# initialize a data frame with two columns: k, and accuracy.
+library(caret)
+valid.norm.df$STATUS <- as.factor(valid.norm.df$STATUS)
+accuracy.df <- data.frame(k = seq(1, 14, 1), accuracy = rep(0, 14))
+
+# compute knn for different k on validation.
+for(i in 1:14) {
+  knn.pred <- knn(train.norm.df[,-6], valid.norm.df[, -6], 
+                  cl = train.norm.df[, 6], k = i)
+  accuracy.df[i, 2] <- confusionMatrix(knn.pred, valid.norm.df[, 6])$overall[1] 
+}
+accuracy.df
+```
+
+
+The value of k that provides the best performance is k = 6. We apply the results to the test set.
+
+***
+
+## Prediction
+
+Before we predict for the test set, we should combine the Training and Validation set, normalize the data, and then do the prediction. 
+```{r}
+trainValid.df <- rbind(train.df,valid.df)
+trainValid.norm.df <- trainValid.df # make a copy
+norm.values <- preProcess(trainValid.df[, c(1:5,9)], method=c("center", "scale")) # Use combined set to normalize
+
+
+trainValid.norm.df[, c(1:5,9)] <- predict(norm.values, trainValid.df[,c(1:5,9)])
+test.norm.df[, c(1:5,9)] <- predict(norm.values, test.df[, c(1:5,9)])
+summary(trainValid.norm.df)
+summary(test.norm.df)
+```
+
+Now we predict for the test set.
+
+```{r}
+knn.pred.new <- knn(trainValid.norm.df[, -6], test.norm.df[,-6], 
+                    cl = trainValid.norm.df[, 6], k = 6)
+attr(knn.pred.new, "nn.index")
+```
+
